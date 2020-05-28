@@ -98,19 +98,21 @@ class WindowAcSpider(scrapy.Spider):
                 new_url = pdp_urls
             else:
                 new_url = 'https://www.amazon.com' + pdp_urls
-            request = scrapy.Request('https://www.amazon.com/FRIGIDAIRE-Window-Mounted-Mini-Compact-Conditioner-Mechanical/dp/B07RGM11L5/ref=lp_3737721_1_1/145-3995112-6618151?s=home-garden&ie=UTF8&qid=1590592540&sr=1-1',
-                                     callback=self.get_product_description,
-                                     cb_kwargs=dict(page_url=response.url, start_time=start_time),
-                                     errback=self.get_https_errors, dont_filter=True)
+            request = scrapy.Request(
+                'https://www.amazon.com/Emerson-Quiet-Kool-EARC15RSE1-Conditioner/dp/B07PZQ5MDB',
+                callback=self.get_product_description,
+                cb_kwargs=dict(page_url=response.url, start_time=start_time),
+                errback=self.get_https_errors, dont_filter=True)
             yield request
         if WindowAcSpider.page_number == 1:
             next_page = response.css('div#pagn span.pagnRA a.pagnNext::attr(href)').extract_first()
         else:
             next_page = response.css('ul.a-pagination li.a-last a::attr(href)').extract_first()
         WindowAcSpider.page_number += 1
-        if  WindowAcSpider.page_number == 1:
+        next_page = 'https://www.amazon.com/s?rh=n%3A1055398%2Cn%3A%211063498%2Cn%3A3206324011%2Cn%3A14554126011%2Cn%3A3737721&page='+ str(WindowAcSpider.page_number)
+        if WindowAcSpider.page_number == 1:
             next_page_url = 'https://www.amazon.com' + next_page
-            yield response.follow(next_page_url, callback=self.parse)
+            yield response.follow(next_page, callback=self.parse)
 
     def get_https_errors(self, failure):
         # log all failures
@@ -140,8 +142,11 @@ class WindowAcSpider(scrapy.Spider):
         items = AmazonItem()
         pdp_information_matrix_list = []
         pdp_customer_rating_matrix_list = []
+        print(response)
         pdp_title = response.css('span#productTitle::text').extract_first()
-        pdp_price = response.css('div#price tr#priceblock_ourprice_row td.a-span12 span#priceblock_ourprice::text').extract_first()
+        pdp_price = response.xpath('//span[contains(@id,"ourprice") or contains(@id,"saleprice")]/text()').extract()
+        # pdp_price = response.css(
+        #     'div#price tr#priceblock_ourprice_row td.a-span12 span#priceblock_ourprice::text').extract_first()
         pdp_saving_price = response.css(
             'div#price tr td.a-size-base span.priceBlockStrikePriceString::text').extract_first()
         pdp_bullet_description = response.css('div#feature-bullets span.a-list-item::text').extract()

@@ -97,27 +97,26 @@ class WindowAcNewSpider(scrapy.Spider):
             # price = response.css('span.a-price-whole::text').extract()
             # print(price)
 
-        # for pdp_urls in pdp_url:
-        # proxy = next(proxy_pool)
-        # if WindowAcNewSpider.page_number == 1:
-        #     new_url = pdp_urls
-        # else:
-        #     new_url = 'https://www.amazon.com' + pdp_urls
-        request = scrapy.Request(
-            'https://www.amazon.com/Frigidaire-FFRS1022R1-115-volt-Conditioner-Full-Function/dp/B00VV2JV3I/ref'
-            '=lp_3737721_1_21?s=home-garden&ie=UTF8&qid=1590640104&sr=1-21',
-            callback=self.get_product_description,
-            cb_kwargs=dict(page_url=response.url, start_time=start_time),
-            errback=self.get_https_errors, dont_filter=True)
-        yield request
-        # if WindowAcNewSpider.page_number == 1:
-        #     next_page = response.css('div#pagn span.pagnRA a.pagnNext::attr(href)').extract_first()
-        # else:
-        #     next_page = response.css('ul.a-pagination li.a-last a::attr(href)').extract_first()
-        # WindowAcNewSpider.page_number += 1
-        # if next_page != '':
-        #     next_page_url = 'https://www.amazon.com' + next_page
-        #     yield response.follow(next_page_url, callback=self.parse)
+        for pdp_urls in pdp_url:
+            proxy = next(proxy_pool)
+            if WindowAcNewSpider.page_number == 1:
+                new_url = pdp_urls
+            else:
+                new_url = 'https://www.amazon.com' + pdp_urls
+            request = scrapy.Request(new_url,
+                                     callback=self.get_product_description,
+                                     meta={"http": proxy, "https": proxy},
+                                     cb_kwargs=dict(page_url=response.url, start_time=start_time),
+                                     errback=self.get_https_errors, dont_filter=True, headers=headers)
+            yield request
+        if WindowAcNewSpider.page_number == 1:
+            next_page = response.css('div#pagn span.pagnRA a.pagnNext::attr(href)').extract_first()
+        else:
+            next_page = response.css('ul.a-pagination li.a-last a::attr(href)').extract_first()
+        WindowAcNewSpider.page_number += 1
+        if next_page != '':
+            next_page_url = 'https://www.amazon.com' + next_page
+            yield response.follow(next_page_url, callback=self.parse)
 
     def get_https_errors(self, failure):
         # log all failures
@@ -147,10 +146,10 @@ class WindowAcNewSpider(scrapy.Spider):
         items = AmazonItem()
         sale_price = response.xpath('//span[contains(@id,"priceblock_saleprice") or contains(@id,'
                                     '"priceblock_ourprice")]/text()').extract()
-
-        pdp_title = response.css('span#priceblock_ourprice::text').extract_first()
-        pdp_price = response.css('div#price').extract()
-        print(sale_price)
+        pdp_title = response.css('span#productTitle::text').extract()
+        pdp_price = response.css('tr#priceblock_ourprice_row span#priceblock_ourprice::text').extract()
+        # pdp_price = response.css('div#price')
+        print(pdp_price)
         # pdp_saving_price = response.css('span.priceBlockStrikePriceString::text').extract_first()
         # pdp_bullet_description = response.css('div#feature-bullets span.a-list-item::text').extract()
         # all_desc_details = response.css('div#prodDetails table.prodDetTable tr')
