@@ -22,7 +22,7 @@ USER_AGENT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot
 ROBOTSTXT_OBEY = False
 
 ROTATING_PROXY_LIST = [
-    '103.87.48.45'
+    '165.22.213.55'
 ]
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
